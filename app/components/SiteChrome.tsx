@@ -6,7 +6,7 @@ export function SiteHeader() {
         <span>Words Have Weather<small>Australian education media</small></span>
       </a>
       <nav aria-label="Main navigation">
-        <a href="/#how-it-works">How it works</a>
+        <a href="/#how-it-works" target="_top">How it works</a>
         <a href="/episodes" target="_top">Stories</a>
         <a href="/parents" target="_top">Parents</a>
         <a href="/educators" target="_top">Educators</a>

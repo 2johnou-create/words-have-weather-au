@@ -20,7 +20,7 @@ export default function ParentsPage() {
           <p className="eyebrow">For parents and carers</p>
           <h1>A next sentence for the moment you are actually in.</h1>
           <p>Start with a familiar pressure point, see how the words may land, keep the boundary and practise one line. The goal is not perfect parenting or instant cooperation.</p>
-          <div className="hero-actions"><a className="button button-primary" href="/episodes" target="_top">Find a story</a><a className="button button-secondary" href="/#weather-shift">See how it works</a></div>
+          <div className="hero-actions"><a className="button button-primary" href="/episodes" target="_top">Find a story</a><a className="button button-secondary" href="/#weather-shift" target="_top">See how it works</a></div>
         </div>
         <Image src="/stories/morning-transition.jpg" width={1535} height={1024} sizes="(max-width: 820px) 100vw, 46vw" priority alt="Mina ties her shoe while Alex waits with her school bag and Willo notices the changing weather" />
       </section>
