@@ -189,10 +189,11 @@ test("a signed-up member receives the protected versioned PDF asset", async () =
 });
 
 test("member, admin and curriculum safeguards are wired into the site", async () => {
-  const [worker, signup, admin, journey, hosting, migration, vite] = await Promise.all([
+  const [worker, signup, admin, adminAccess, journey, hosting, migration, vite] = await Promise.all([
     readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/MemberSignupForm.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/AdminConsole.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin-access.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/journey/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0000_little_mandrill.sql", import.meta.url), "utf8"),
@@ -217,6 +218,7 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(admin, /Remove/);
   assert.match(admin, /Schedule/);
   assert.match(admin, /zipSync/);
+  assert.match(adminAccess, /user[.]userId === "admin:owner"/);
   assert.match(journey, /Possible connections, not a packaged curriculum/);
   assert.match(journey, /australiancurriculum[.]edu[.]au/);
   assert.equal(JSON.parse(hosting).d1, "DB");
