@@ -191,12 +191,15 @@ export default async function Home() {
         <div className="mini-episode-grid">
           {featured.map((episode) => (
             <article key={episode.id}>
-              <Image src={episode.educatorPreview} width={745} height={1053} sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 33vw" alt={`Preview of Episode ${episode.code}, ${episode.title}`} />
+              <Link className="mini-episode-cover" href={`/episodes/${episode.code}`} aria-label={`Preview Episode ${episode.code}: ${episode.title}`}>
+                <Image src={episode.heroImage} width={900} height={600} sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 33vw" alt={`Story illustration for Episode ${episode.code}, ${episode.title}`} />
+              </Link>
               <div>
                 <span>Episode {episode.code} · {episode.category}</span>
-                <h3>{episode.title}</h3>
+                <h3><Link href={`/episodes/${episode.code}`}>{episode.title}</Link></h3>
                 <p>{episode.keyLearning}</p>
                 <small>Released {formatReleaseDate(episode.effectiveReleaseDate)}</small>
+                <Link className="mini-preview-link" href={`/episodes/${episode.code}`}>Preview episode <span aria-hidden="true">→</span></Link>
               </div>
             </article>
           ))}

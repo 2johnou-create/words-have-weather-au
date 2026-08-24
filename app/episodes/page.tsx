@@ -1,5 +1,7 @@
 import { applyOverrides, episodes } from "@/data/episodes";
-import { loadEpisodeOverrides } from "@/db/episode-state";
+import { getMember, loadEpisodeOverrides } from "@/db/episode-state";
+import { getChatGPTUser } from "../chatgpt-auth";
+import { isAdmin } from "../admin-access";
 import { EpisodeLibrary } from "../components/EpisodeLibrary";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 
@@ -13,6 +15,9 @@ export default async function EpisodesPage({
   const params = await searchParams;
   const effectiveEpisodes = applyOverrides(episodes, await loadEpisodeOverrides());
   const today = new Date().toISOString().slice(0, 10);
+  const user = await getChatGPTUser();
+  const member = user ? await getMember(user.userId).catch(() => null) : null;
+  const canDownload = Boolean(member) || isAdmin(user);
 
   return (
     <main>
@@ -25,7 +30,7 @@ export default async function EpisodesPage({
         <div className="category-counts"><span>40 Sprout</span><span>40 All Ages</span><span>40 Trail</span><span>15 releases each month</span></div>
       </section>
       <section className="section library-section" id="episode-library">
-        <EpisodeLibrary episodes={effectiveEpisodes} initialCategory={params.category ?? "All"} today={today} />
+        <EpisodeLibrary episodes={effectiveEpisodes} initialCategory={params.category ?? "All"} today={today} canDownload={canDownload} />
       </section>
       <SiteFooter />
     </main>

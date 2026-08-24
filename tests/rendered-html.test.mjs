@@ -77,6 +77,24 @@ test("all 120 episode heroes, protected PDFs, previews and metadata files exist"
   assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
 });
 
+test("every episode card leads to a real public preview with clear gated actions", async () => {
+  const [library, episodePage, home] = await Promise.all([
+    readFile(new URL("../app/components/EpisodeLibrary.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/episodes/[code]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(library, /Preview episode/);
+  assert.match(library, /Join to download both PDFs/);
+  assert.match(library, /episodes\/\$\{episode[.]code\}/);
+  assert.match(episodePage, /Pressure line/);
+  assert.match(episodePage, /Keep the boundary/);
+  assert.match(episodePage, /Possible curriculum and key-learning connections/);
+  assert.match(episodePage, /Join free to download/);
+  assert.match(episodePage, /Download educator worksheet/);
+  assert.match(home, /episode[.]heroImage/);
+  assert.match(home, /Preview episode/);
+});
+
 test("anonymous workbook downloads are sent through the member journey", async () => {
   const worker = await getWorker();
   const response = await worker.fetch(
