@@ -16,7 +16,7 @@ const localBindingConfig = {
   compatibility_flags: ["nodejs_compat"],
   // Workbook files are static assets, but access depends on membership,
   // release date and admin overrides. Route assets through the Worker first.
-  assets: { run_worker_first: true },
+  assets: { binding: "ASSETS", run_worker_first: ["/downloads/*"] },
   d1_databases: d1
     ? [
         {

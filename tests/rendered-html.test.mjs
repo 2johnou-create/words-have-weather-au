@@ -109,6 +109,6 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.equal(JSON.parse(hosting).d1, "DB");
   assert.match(migration, /CREATE TABLE `members`/);
   assert.match(migration, /CREATE TABLE `episode_overrides`/);
-  assert.match(vite, /run_worker_first: true/);
+  assert.match(vite, /binding: "ASSETS", run_worker_first: \["\/downloads\/\*"\]/);
   await assert.rejects(access(new URL("../app/_sites-preview", projectRoot)));
 });
