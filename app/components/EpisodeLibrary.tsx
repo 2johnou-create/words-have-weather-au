@@ -83,7 +83,7 @@ export function EpisodeLibrary({ episodes, initialCategory, today }: Props) {
           return (
             <article className={`episode-card category-${episode.category.toLowerCase().replaceAll(" ", "-")}`} key={episode.id}>
               <div className="episode-cover">
-                <Image width={745} height={1053} sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 33vw" src={episode.educatorPreview} alt={`Educator worksheet cover for Episode ${episode.code}, ${episode.title}`} />
+                <Image width={900} height={600} sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 33vw" src={episode.heroImage} alt={`Story illustration for Episode ${episode.code}, ${episode.title}`} />
                 <span className={`release-badge ${state.className}`}>{state.label}</span>
               </div>
               <div className="episode-card-copy">

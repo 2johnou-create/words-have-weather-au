@@ -27,6 +27,7 @@ export type Episode = {
   keyLearning: string;
   curriculum: string[];
   defaultStatus: EpisodeStatus;
+  heroImage: string;
   educatorPdf: string;
   parentPdf: string;
   educatorPreview: string;

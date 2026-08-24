@@ -545,8 +545,8 @@ select:focus { border-color: var(--sage-dark); box-shadow: 0 0 0 3px rgba(111, 1
 .episode-card.category-all-ages { border-top: 5px solid #70a0ab; }
 .episode-card.category-trail { border-top: 5px solid var(--terracotta); }
 
-.episode-cover { position: relative; height: 250px; overflow: hidden; background: #ece9df; }
-.episode-cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 250ms ease; }
+.episode-cover { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: #ece9df; }
+.episode-cover img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 250ms ease; }
 .episode-card:hover .episode-cover img { transform: scale(1.025); }
 
 .release-badge {
@@ -775,7 +775,7 @@ select:focus { border-color: var(--sage-dark); box-shadow: 0 0 0 3px rgba(111, 1
   .library-controls .search-field { grid-column: auto; }
   .library-result-bar { display: block; }
   .episode-grid { grid-template-columns: 1fr; }
-  .episode-cover { height: 320px; }
+  .episode-cover { height: auto; }
   .journey-view-intro { gap: 0; }
   .journey-stage-grid article { padding: 25px; }
   .form-row { grid-template-columns: 1fr; }

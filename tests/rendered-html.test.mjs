@@ -54,20 +54,27 @@ test("catalogue contains a balanced 120-episode learning and release plan", asyn
     assert.ok(episode.curriculum.length >= 3);
     assert.match(episode.educatorPdf, /episode-\d{3}-educator-worksheet[.]pdf$/);
     assert.match(episode.parentPdf, /episode-\d{3}-parent-practice-workbook[.]pdf$/);
+    assert.match(episode.heroImage, /episode-\d{3}-hero[.]webp$/);
   }
 });
 
-test("all 120 public previews and metadata files exist without exposed PDF assets", async () => {
+test("all 120 episode heroes, protected PDFs, previews and metadata files exist", async () => {
+  const heroBytes = new Set();
   for (let episode = 1; episode <= 120; episode += 1) {
     const id = String(episode).padStart(3, "0");
+    const hero = await readFile(new URL(`../public/episodes/episode-${id}-hero.webp`, import.meta.url));
+    heroBytes.add(hero.toString("base64"));
     await access(new URL(`../public/resources/episode-${id}-educator-worksheet-preview.webp`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-parent-practice-workbook-preview.webp`, import.meta.url));
+    await access(new URL(`../public/downloads/episode-${id}-educator-worksheet.pdf`, import.meta.url));
+    await access(new URL(`../public/downloads/episode-${id}-parent-practice-workbook.pdf`, import.meta.url));
     await access(new URL(`../public/content/episode-${id}.json`, import.meta.url));
   }
+  assert.equal(heroBytes.size, 120);
   await access(new URL("../public/catalog/episodes.json", import.meta.url));
   await access(new URL("../public/og-120.png", import.meta.url));
   const publicDownloads = await readdir(new URL("../public/downloads/", import.meta.url));
-  assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 0);
+  assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
 });
 
 test("anonymous workbook downloads are sent through the member journey", async () => {
@@ -95,6 +102,41 @@ test("legacy two-digit workbook links redirect to the canonical protected path",
   );
 });
 
+test("a signed-up member receives the protected versioned PDF asset", async () => {
+  const worker = await getWorker();
+  const db = {
+    prepare(sql) {
+      return {
+        bind() {
+          return {
+            async first() {
+              if (sql.includes("FROM members")) return { user_id: "member-1" };
+              return null;
+            },
+            async run() { return { success: true }; },
+          };
+        },
+      };
+    },
+  };
+  const response = await worker.fetch(
+    new Request("http://localhost/downloads/episode-001-educator-worksheet.pdf", {
+      headers: { "oai-authenticated-user-id": "member-1" },
+    }),
+    {
+      ASSETS: { fetch: async () => new Response("%PDF-episode-001", { status: 200, headers: { "content-type": "application/pdf" } }) },
+      DB: db,
+      RESOURCES: { get: async () => null },
+    },
+    testContext(),
+  );
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "application/pdf");
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.match(response.headers.get("content-disposition") ?? "", /episode-001-educator-worksheet[.]pdf/);
+  assert.match(await response.text(), /^%PDF/);
+});
+
 test("member, admin and curriculum safeguards are wired into the site", async () => {
   const [worker, signup, admin, journey, hosting, migration, vite] = await Promise.all([
     readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
@@ -109,6 +151,7 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(worker, /SELECT user_id FROM members/);
   assert.match(worker, /release_date/);
   assert.match(worker, /RESOURCES[.]get/);
+  assert.match(worker, /ASSETS[.]fetch/);
   assert.doesNotMatch(worker, /bootstrap-resources|RESOURCE_BOOTSTRAP_TOKEN/);
   assert.match(worker, /padStart\(3, "0"\)/);
   assert.match(signup, /firstName/);

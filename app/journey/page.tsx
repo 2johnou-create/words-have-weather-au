@@ -32,8 +32,8 @@ export default async function JourneyPage({
         <div>
           <p>Educators should select only the framework elements genuinely addressed in their local learning design. These links do not imply government approval, mandate or endorsement.</p>
           <ul>
-            <li><a href="https://v9.australiancurriculum.edu.au/curriculum-information/understand-this-general-capability/personal-and-social-capability" target="_blank" rel="noreferrer">Australian Curriculum v9.0: Personal and Social capability</a></li>
-            <li><a href="https://v9.australiancurriculum.edu.au/curriculum-information/understand-this-learning-area/health-and-physical-education" target="_blank" rel="noreferrer">Australian Curriculum v9.0: Health and Physical Education</a></li>
+            <li><a href="https://www.australiancurriculum.edu.au/curriculum-information/understand-this-general-capability/personal-and-social-capability" target="_blank" rel="noreferrer">Australian Curriculum v9.0: Personal and Social capability</a></li>
+            <li><a href="https://www.australiancurriculum.edu.au/curriculum-information/understand-this-learning-area/health-and-physical-education" target="_blank" rel="noreferrer">Australian Curriculum v9.0: Health and Physical Education</a></li>
             <li><a href="https://www.acecqa.gov.au/sites/default/files/2023-01/EYLF-2022-V2.0.pdf" target="_blank" rel="noreferrer">Early Years Learning Framework V2.0</a></li>
           </ul>
         </div>

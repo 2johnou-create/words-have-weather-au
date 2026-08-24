@@ -72,6 +72,17 @@ async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext):
     ).bind(userId, episodeId, audience).run(),
   );
   const filename = url.pathname.split("/").pop()!;
+  const staticAsset = await env.ASSETS.fetch(new Request(url));
+  if (staticAsset.ok) {
+    const headers = new Headers(staticAsset.headers);
+    headers.set("content-type", "application/pdf");
+    headers.set("cache-control", "private, no-store");
+    headers.set("content-disposition", `attachment; filename="${filename}"`);
+    return new Response(staticAsset.body, { status: 200, headers });
+  }
+
+  // Keep R2 as a backwards-compatible fallback for resources published before
+  // the complete protected library became part of the versioned site assets.
   const asset = await env.RESOURCES.get(`downloads/${filename}`);
   if (!asset) return new Response("Resource not found", { status: 404 });
   const headers = new Headers();
