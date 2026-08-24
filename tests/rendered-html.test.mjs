@@ -82,13 +82,14 @@ test("anonymous workbook downloads are sent through the member journey", async (
 });
 
 test("member, admin and curriculum safeguards are wired into the site", async () => {
-  const [worker, signup, admin, journey, hosting, migration] = await Promise.all([
+  const [worker, signup, admin, journey, hosting, migration, vite] = await Promise.all([
     readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/components/MemberSignupForm.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/AdminConsole.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/journey/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
     readFile(new URL("../drizzle/0000_little_mandrill.sql", import.meta.url), "utf8"),
+    readFile(new URL("../vite.config.ts", import.meta.url), "utf8"),
   ]);
   assert.match(worker, /episode-\(\\d\{2,3\}\)/);
   assert.match(worker, /SELECT user_id FROM members/);
@@ -108,5 +109,6 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.equal(JSON.parse(hosting).d1, "DB");
   assert.match(migration, /CREATE TABLE `members`/);
   assert.match(migration, /CREATE TABLE `episode_overrides`/);
+  assert.match(vite, /run_worker_first: true/);
   await assert.rejects(access(new URL("../app/_sites-preview", projectRoot)));
 });
