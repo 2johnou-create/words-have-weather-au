@@ -1,6 +1,6 @@
 # Words Have Weather printable resource rules
 
-These rules apply to every educator worksheet and parent practice workbook in Season 1.
+These rules apply to all 120 educator worksheets and all 120 parent practice workbooks in the complete learning journey.
 
 ## Shared concept
 
@@ -27,6 +27,7 @@ The resources teach adult reflection. They do not assess children, prescribe one
 - Headings are limited to two lines. Long wording is shortened editorially rather than squeezed below the minimum size.
 - Colour supports hierarchy but never carries the only meaning.
 - Raster illustrations are pre-sized as JPEG and embedded without decoding their compact DCT streams; optimisation must never rasterise or alter the vector text layer.
+- File names use three-digit episode numbers (`episode-001` through `episode-120`) so website, metadata and bulk downloads sort consistently.
 
 ## Educator worksheet pattern - 5 pages
 
@@ -54,3 +55,4 @@ Every episode must pass:
 - educator and parent usability review;
 - safeguarding, accessibility and claims review;
 - confirmation that alignment language says "aligned to" or "possible connection", never "approved" or "endorsed".
+- confirmation that the episode status is enabled and its scheduled release date has arrived before a member download is served.

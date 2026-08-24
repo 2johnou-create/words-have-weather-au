@@ -8,10 +8,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol =
     requestHeaders.get("x-forwarded-proto") ??
     (host.startsWith("localhost") ? "http" : "https");
-  const imageUrl = `${protocol}://${host}/og.png`;
-  const title = "Words Have Weather | Keep the boundary. Change the weather.";
+  const imageUrl = `${protocol}://${host}/og-120.png`;
+  const title = "Words Have Weather | 120 stories for growing through hard moments";
   const description =
-    "Short Australian education stories that help parents, carers and educators keep boundaries while changing tone, timing and wording.";
+    "A free 120-episode Australian learning journey with illustrated workbooks for parents, carers and educators.";
 
   return {
     title,
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       type: "website",
-      images: [{ url: imageUrl, width: 1736, height: 907, alt: "Words Have Weather character cast and tagline" }],
+      images: [{ url: imageUrl, width: 1736, height: 907, alt: "Words Have Weather characters moving through a growing learning journey" }],
     },
     twitter: {
       card: "summary_large_image",

@@ -4,82 +4,109 @@ import test from "node:test";
 
 const projectRoot = new URL("../", import.meta.url);
 
-async function render() {
+async function getWorker() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-
-  return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${Math.random()}`);
+  return (await import(workerUrl.href)).default;
 }
 
-test("server-renders the Words Have Weather landing page", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+function testContext() {
+  return { waitUntil() {}, passThroughOnException() {} };
+}
 
-  const html = await response.text();
-  assert.match(html, /<title>Words Have Weather \| Keep the boundary\./i);
-  assert.match(html, /The rule can be right\./);
-  assert.match(html, /The weather can still change\./);
-  assert.match(html, /35–45 sec/);
-  assert.match(html, /Every 2nd day/);
-  assert.match(html, /Reveal the next sentence/);
-  assert.match(html, /Correct in private/);
-  assert.match(html, /Emotion is weather—not identity/);
-  assert.match(html, /Start with the pressure—not a perfect-parent fantasy/);
-  assert.match(html, /The adult may be carrying/);
-  assert.match(html, /Three age lenses keep the advice specific/);
-  assert.match(html, /Take the story off-screen/);
-  assert.match(html, /15 stories · 30 illustrated A4 resources/);
-  assert.match(html, /episode-01-educator-worksheet[.]pdf/);
-  assert.match(html, /episode-01-parent-practice-workbook[.]pdf/);
-  assert.match(html, /Complete Season 1 collection/);
-  assert.match(html, /Every moment now has a practice pack/);
-  const resourceLinks = html.match(/\/downloads\/episode-\d{2}-(?:educator-worksheet|parent-practice-workbook)[.]pdf/g) ?? [];
-  assert.equal(new Set(resourceLinks).size, 30);
-  assert.doesNotMatch(html, /Pilot sample only/);
-  assert.match(html, /evidence reviewed 24 August 2026/i);
-  assert.match(html, /Some moments need more than a next sentence/);
-  assert.match(html, /aifs\.gov\.au/);
-  assert.match(html, /esafety\.gov\.au/);
-  assert.match(html, /humanrights\.gov\.au/);
-  assert.match(html, /\/stories\/spill-repair\.webp/);
-  assert.match(html, /\/stories\/kerb-safety\.webp/);
-  assert.match(html, /\/stories\/private-correction\.webp/);
-  assert.match(html, /\/stories\/emotional-moments\.webp/);
-  assert.match(html, /Commercially neutral stories/);
-  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|29 Coffee/i);
-});
-
-test("removes starter assets and retains project imagery", async () => {
-  const [page, layout, packageJson] = await Promise.all([
+test("the expanded landing page keeps the complete public promise", async () => {
+  const [page, layout] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
+  const source = `${layout}\n${page}`;
+  assert.match(source, /Words Have Weather \| 120 stories/i);
+  assert.match(source, /120 short stories · one connected learning journey/i);
+  assert.match(source, /Explore all 120 episodes/);
+  assert.equal((source.match(/count: 40/g) ?? []).length, 3);
+  assert.match(source, /Sprout/);
+  assert.match(source, /All Ages/);
+  assert.match(source, /Trail/);
+  assert.match(source, /eight-stage learning arc/i);
+  assert.match(source, /15.*scheduled each month/is);
+  assert.match(source, /Free educational membership/);
+  assert.match(source, /educational-use terms/);
+  assert.match(source, /character-lineup[.]png/);
+  assert.doesNotMatch(source, /29 Coffee|commercial promotion|codex-preview/i);
+});
 
-  assert.match(page, /character-lineup\.png/);
-  assert.match(layout, /lang="en-AU"/);
-  assert.match(layout, /x-forwarded-proto/);
-  assert.match(layout, /\/og\.png/);
-  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
-  await access(new URL("../public/character-lineup.png", import.meta.url));
-  await access(new URL("../public/og.png", import.meta.url));
-  await access(new URL("../public/stories/spill-repair.webp", import.meta.url));
-  await access(new URL("../public/stories/kerb-safety.webp", import.meta.url));
-  await access(new URL("../public/stories/private-correction.webp", import.meta.url));
-  await access(new URL("../public/stories/emotional-moments.webp", import.meta.url));
-  for (let episode = 1; episode <= 15; episode += 1) {
-    const id = String(episode).padStart(2, "0");
+test("catalogue contains a balanced 120-episode learning and release plan", async () => {
+  const catalogue = JSON.parse(await readFile(new URL("../data/episode-catalog.json", import.meta.url), "utf8"));
+  assert.equal(catalogue.length, 120);
+  assert.deepEqual(
+    Object.fromEntries(["Sprout", "All Ages", "Trail"].map((category) => [category, catalogue.filter((episode) => episode.category === category).length])),
+    { Sprout: 40, "All Ages": 40, Trail: 40 },
+  );
+  assert.deepEqual(
+    Object.fromEntries(Array.from({ length: 8 }, (_, index) => [index + 1, catalogue.filter((episode) => episode.stage === index + 1).length])),
+    { 1: 15, 2: 15, 3: 15, 4: 15, 5: 15, 6: 15, 7: 15, 8: 15 },
+  );
+  const monthly = Object.groupBy(catalogue, (episode) => episode.releaseDate.slice(0, 7));
+  assert.equal(Object.keys(monthly).length, 8);
+  for (const episodes of Object.values(monthly)) assert.equal(episodes.length, 15);
+  for (const episode of catalogue) {
+    assert.ok(episode.keyLearning.length > 20);
+    assert.ok(episode.curriculum.length >= 3);
+    assert.match(episode.educatorPdf, /episode-\d{3}-educator-worksheet[.]pdf$/);
+    assert.match(episode.parentPdf, /episode-\d{3}-parent-practice-workbook[.]pdf$/);
+  }
+});
+
+test("all 120 complete episode packs and metadata files exist", async () => {
+  for (let episode = 1; episode <= 120; episode += 1) {
+    const id = String(episode).padStart(3, "0");
     await access(new URL(`../public/downloads/episode-${id}-educator-worksheet.pdf`, import.meta.url));
     await access(new URL(`../public/downloads/episode-${id}-parent-practice-workbook.pdf`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-educator-worksheet-preview.webp`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-parent-practice-workbook-preview.webp`, import.meta.url));
+    await access(new URL(`../public/content/episode-${id}.json`, import.meta.url));
   }
-  await access(new URL("../RESEARCH_NOTES.md", import.meta.url));
+  await access(new URL("../public/catalog/episodes.json", import.meta.url));
+  await access(new URL("../public/og-120.png", import.meta.url));
+});
+
+test("anonymous workbook downloads are sent through the member journey", async () => {
+  const worker = await getWorker();
+  const response = await worker.fetch(
+    new Request("http://localhost/downloads/episode-001-educator-worksheet.pdf"),
+    { ASSETS: { fetch: async () => new Response("asset") } },
+    testContext(),
+  );
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get("location") ?? "", /\/signin-with-chatgpt[?]return_to=%2Fdownloads%2Fepisode-001-educator-worksheet[.]pdf$/);
+});
+
+test("member, admin and curriculum safeguards are wired into the site", async () => {
+  const [worker, signup, admin, journey, hosting, migration] = await Promise.all([
+    readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/MemberSignupForm.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/AdminConsole.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/journey/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0000_little_mandrill.sql", import.meta.url), "utf8"),
+  ]);
+  assert.match(worker, /episode-\(\\d\{2,3\}\)/);
+  assert.match(worker, /SELECT user_id FROM members/);
+  assert.match(worker, /release_date/);
+  assert.match(signup, /firstName/);
+  assert.match(signup, /lastName/);
+  assert.match(signup, /educationTerms/);
+  assert.match(signup, /updatesOptIn/);
+  assert.match(admin, /Select all 120/);
+  assert.match(admin, /Enable/);
+  assert.match(admin, /Disable/);
+  assert.match(admin, /Remove/);
+  assert.match(admin, /Schedule/);
+  assert.match(admin, /zipSync/);
+  assert.match(journey, /Possible connections, not a packaged curriculum/);
+  assert.match(journey, /australiancurriculum[.]edu[.]au/);
+  assert.equal(JSON.parse(hosting).d1, "DB");
+  assert.match(migration, /CREATE TABLE `members`/);
+  assert.match(migration, /CREATE TABLE `episode_overrides`/);
   await assert.rejects(access(new URL("../app/_sites-preview", projectRoot)));
 });
