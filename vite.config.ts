@@ -14,9 +14,10 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const localBindingConfig = {
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
-  // Workbook files are static assets, but access depends on membership,
-  // release date and admin overrides. Route assets through the Worker first.
-  assets: { binding: "ASSETS", run_worker_first: ["/downloads/*"] },
+  // Every request enters the Worker before the static asset layer. This keeps
+  // workbook PDFs behind membership and release checks in production while
+  // the app router continues to serve ordinary assets through ASSETS.
+  assets: { binding: "ASSETS", run_worker_first: true },
   d1_databases: d1
     ? [
         {
