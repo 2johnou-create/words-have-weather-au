@@ -1,4 +1,6 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+import { IllustratedMoments } from "../components/IllustratedMoments";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 
 const planningSteps = [
@@ -17,6 +19,8 @@ const frameworkRows = [
   ["Teacher reflection", "APST + evidence-informed classroom practice", "Clear communication, participation, safe learning environments, feedback and family partnership where relevant"],
 ];
 
+export const metadata: Metadata = { title: "For Australian educators", description: "Preview commercially neutral communication stories, curriculum connections and consistent educator worksheets.", alternates: { canonical: "/educators" } };
+
 export default function EducatorsPage() {
   return (
     <main>
@@ -31,6 +35,12 @@ export default function EducatorsPage() {
         </div>
         <Image src="/stories/private-correction.webp" width={1536} height={1024} sizes="(max-width: 820px) 100vw, 46vw" priority alt="Ms Chen speaks privately with Leo at his desk while the class continues learning" />
       </section>
+
+      <IllustratedMoments eyebrow="Classroom situations" title="Preview the interaction before planning the learning." items={[
+        { code: "006", label: "Correct with dignity", alt: "Ms Chen speaks privately with Leo while classmates continue learning" },
+        { code: "047", label: "Make the first step visible", alt: "An educator helps a learner find a clear starting point" },
+        { code: "094", label: "Listen before solving", alt: "A teacher listens carefully as a student explains a school concern" },
+      ]} />
 
       <section className="section educator-planning">
         <div className="section-heading"><p className="eyebrow">A transparent planning sequence</p><h2>From story selection to local review.</h2><p>The website separates discovery, preview, curriculum mapping and download so an educator can evaluate the material before using it.</p></div>
@@ -74,7 +84,7 @@ export default function EducatorsPage() {
 
       <section className="member-cta educator-member-cta">
         <div><p className="eyebrow">Free educational membership</p><h2>Download released educator and parent resources.</h2></div>
-        <div><p>Sign in once, provide your name and email, accept the education-use terms and choose whether to receive release updates.</p><a className="button button-light" href="/join" target="_top">Join free</a></div>
+        <div><p>Join directly with your name and email, accept the education-use terms and choose whether to receive release updates. No social sign-in is required.</p><a className="button button-light" href="/join" target="_top">Join free</a></div>
       </section>
       <SiteFooter />
     </main>

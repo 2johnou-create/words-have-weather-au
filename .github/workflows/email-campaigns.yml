@@ -1,0 +1,19 @@
+name: Email learning updates
+
+on:
+  schedule:
+    - cron: "15 21 * * *"
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Queue and send due Words Have Weather emails
+        env:
+          EMAIL_CRON_SECRET: ${{ secrets.EMAIL_CRON_SECRET }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer ${EMAIL_CRON_SECRET}" \
+            https://words-have-weather-au.misty-jelly-1931.chatgpt.site/api/email/dispatch

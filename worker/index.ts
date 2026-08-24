@@ -2,11 +2,13 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import catalog from "../data/episode-catalog.json";
+import { sessionTokenFromRequest, verifySiteSession } from "../lib/session";
 
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   RESOURCES: R2Bucket;
+  AUTH_SECRET?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -16,12 +18,13 @@ interface Env {
   };
 }
 
-const ADMIN_EMAILS = new Set(["2johnou@gmail.com"]);
+type RuntimeEnv = Env | undefined;
 
-async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext): Promise<Response | null> {
+async function gatedDownload(request: Request, env: RuntimeEnv, ctx: ExecutionContext): Promise<Response | null> {
   const url = new URL(request.url);
   const match = url.pathname.match(/^\/downloads\/episode-(\d{2,3})-(educator-worksheet|parent-practice-workbook)\.pdf$/);
   if (!match) return null;
+  if (!env) return new Response("Resource storage is unavailable.", { status: 503 });
 
   if (match[1].length === 2) {
     const canonical = new URL(
@@ -32,15 +35,15 @@ async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext):
     return Response.redirect(canonical, 308);
   }
 
-  const userId = request.headers.get("oai-authenticated-user-id");
-  const email = request.headers.get("oai-authenticated-user-email")?.toLowerCase() ?? "";
-  if (!userId) {
-    const signIn = new URL("/signin-with-chatgpt", request.url);
-    signIn.searchParams.set("return_to", url.pathname);
-    return Response.redirect(signIn, 302);
+  const session = await verifySiteSession(sessionTokenFromRequest(request), env.AUTH_SECRET);
+  if (!session) {
+    const join = new URL("/join", request.url);
+    join.searchParams.set("return_to", url.pathname);
+    return Response.redirect(join, 302);
   }
 
-  const isOwner = ADMIN_EMAILS.has(email);
+  const userId = session.userId;
+  const isOwner = session.kind === "admin";
   if (!isOwner) {
     const member = await env.DB.prepare(
       "SELECT user_id FROM members WHERE user_id = ? LIMIT 1",
@@ -95,13 +98,14 @@ interface ExecutionContext {
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
 const worker = {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: RuntimeEnv, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     const download = await gatedDownload(request, env, ctx);
     if (download) return download;
 
     if (url.pathname === "/_vinext/image") {
+      if (!env) return new Response("Image service is unavailable.", { status: 503 });
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       return handleImageOptimization(request, {
         fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
@@ -112,7 +116,19 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const session = await verifySiteSession(sessionTokenFromRequest(request), env?.AUTH_SECRET);
+    const headers = new Headers(request.headers);
+    headers.delete("oai-authenticated-user-id");
+    headers.delete("oai-authenticated-user-email");
+    headers.delete("oai-authenticated-user-full-name");
+    headers.delete("oai-authenticated-user-full-name-encoding");
+    if (session) {
+      headers.set("oai-authenticated-user-id", session.userId);
+      headers.set("oai-authenticated-user-email", session.email);
+      headers.set("oai-authenticated-user-full-name", encodeURIComponent(session.fullName));
+      headers.set("oai-authenticated-user-full-name-encoding", "percent-encoded-utf-8");
+    }
+    return handler.fetch(new Request(request, { headers }), env as Env, ctx);
   },
 };
 

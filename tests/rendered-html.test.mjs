@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
@@ -12,6 +13,12 @@ async function getWorker() {
 
 function testContext() {
   return { waitUntil() {}, passThroughOnException() {} };
+}
+
+function signedSession(session, secret) {
+  const payload = Buffer.from(JSON.stringify(session)).toString("base64url");
+  const signature = createHmac("sha256", secret).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
 }
 
 test("the rebuilt landing page explains the promise before presenting the catalogue", async () => {
@@ -126,7 +133,7 @@ test("anonymous workbook downloads are sent through the member journey", async (
     testContext(),
   );
   assert.equal(response.status, 302);
-  assert.match(response.headers.get("location") ?? "", /\/signin-with-chatgpt[?]return_to=%2Fdownloads%2Fepisode-001-educator-worksheet[.]pdf$/);
+  assert.match(response.headers.get("location") ?? "", /\/join[?]return_to=%2Fdownloads%2Fepisode-001-educator-worksheet[.]pdf$/);
 });
 
 test("legacy two-digit workbook links redirect to the canonical protected path", async () => {
@@ -145,6 +152,8 @@ test("legacy two-digit workbook links redirect to the canonical protected path",
 
 test("a signed-up member receives the protected versioned PDF asset", async () => {
   const worker = await getWorker();
+  const secret = "test-only-auth-secret-that-is-longer-than-32-characters";
+  const token = signedSession({ kind: "member", userId: "member-1", email: "member@example.test", fullName: "Test Member", expiresAt: Date.now() + 60_000 }, secret);
   const db = {
     prepare(sql) {
       return {
@@ -162,10 +171,11 @@ test("a signed-up member receives the protected versioned PDF asset", async () =
   };
   const response = await worker.fetch(
     new Request("http://localhost/downloads/episode-001-educator-worksheet.pdf", {
-      headers: { "oai-authenticated-user-id": "member-1" },
+      headers: { cookie: `whw_session=${token}` },
     }),
     {
       ASSETS: { fetch: async () => new Response("asset") },
+      AUTH_SECRET: secret,
       DB: db,
       RESOURCES: { get: async () => ({ body: "%PDF-episode-001", size: 16, httpEtag: "etag-1", httpMetadata: { contentType: "application/pdf" } }) },
     },
@@ -199,6 +209,8 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(signup, /lastName/);
   assert.match(signup, /educationTerms/);
   assert.match(signup, /updatesOptIn/);
+  assert.match(signup, /No GitHub or ChatGPT account is needed/);
+  assert.doesNotMatch(signup, /signin-with-chatgpt|Continue with ChatGPT/);
   assert.match(admin, /Select all 120/);
   assert.match(admin, /Enable/);
   assert.match(admin, /Disable/);
@@ -213,6 +225,34 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(migration, /CREATE TABLE `episode_overrides`/);
   assert.match(vite, /binding: "ASSETS", run_worker_first: true/);
   await assert.rejects(access(new URL("../app/_sites-preview", projectRoot)));
+});
+
+test("public access, SEO, restored brand and sitemap are explicit", async () => {
+  const [join, chrome, layout, sitemap, robots, manifest, favicon, login, workflow] = await Promise.all([
+    readFile(new URL("../app/join/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteChrome.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/sitemap.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/robots.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/manifest.ts", import.meta.url), "utf8"),
+    readFile(new URL("../public/favicon.svg", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/auth/login/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/email-campaigns.yml", import.meta.url), "utf8"),
+  ]);
+  assert.match(join, /No GitHub or ChatGPT sign-in/);
+  assert.doesNotMatch(join, /chatGPTSignInPath|Continue with ChatGPT/);
+  assert.match(chrome, /Footer sitemap/);
+  for (const href of ["/episodes", "/journey", "/parents", "/educators", "/join", "/terms", "/sitemap.xml"]) assert.ok(chrome.includes(`href="${href}`));
+  assert.match(layout, /EducationalOrganization/);
+  assert.match(layout, /og-public-v2[.]png/);
+  assert.match(sitemap, /episodes[.]filter[\s\S]+[.]map/);
+  assert.match(robots, /disallow/);
+  assert.match(manifest, /Word Weather/);
+  assert.match(favicon, /#41584D/);
+  assert.match(login, /verifyPasswordRecord/);
+  assert.doesNotMatch(login, /password\s*===\s*["'][^"']+["']/);
+  assert.match(workflow, /api\/email\/dispatch/);
+  await access(new URL("../public/og-public-v2.png", import.meta.url));
 });
 
 test("story imagery is responsive and all illustrated scenes are present", async () => {

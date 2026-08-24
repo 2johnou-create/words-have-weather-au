@@ -30,6 +30,7 @@ export function MemberSignupForm({ defaultFirstName, defaultLastName, defaultEma
         educationTerms: form.get("educationTerms") === "on",
         updatesOptIn: form.get("updatesOptIn") === "on",
       }),
+      credentials: "same-origin",
     });
     const payload = await response.json() as { error?: string };
     if (!response.ok) {
@@ -37,7 +38,7 @@ export function MemberSignupForm({ defaultFirstName, defaultLastName, defaultEma
       setStatus(payload.error ?? "We could not save your membership. Please try again.");
       return;
     }
-    setStatus("Your free membership is ready.");
+    setStatus("Your free membership is ready. Opening your resource...");
     window.setTimeout(() => window.location.assign(returnTo), 400);
   }
 
@@ -51,6 +52,7 @@ export function MemberSignupForm({ defaultFirstName, defaultLastName, defaultEma
       <label className="check-row required-check"><input name="educationTerms" type="checkbox" required defaultChecked={existing} /><span>I agree to use the resources for educational purposes and accept the <a href="/terms" target="_blank">education-use terms</a>.</span></label>
       <label className="check-row"><input name="updatesOptIn" type="checkbox" defaultChecked={defaultUpdatesOptIn} /><span>I would like occasional email updates about new episode and resource releases. I can unsubscribe at any time.</span></label>
       <button className="button button-primary" type="submit" disabled={busy}>{busy ? "Saving..." : existing ? "Update my membership" : "Create my free membership"}</button>
+      <small className="form-privacy-note">No GitHub or ChatGPT account is needed. We use your details only to provide the free library, manage your email choice and improve the educational resource.</small>
       <p className="form-status" role="status">{status}</p>
     </form>
   );

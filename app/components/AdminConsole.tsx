@@ -98,6 +98,11 @@ export function AdminConsole({ episodes, initialOverrides, today }: { episodes: 
 
   const selectedIds = Array.from(selected);
 
+  async function signOut() {
+    await fetch("/api/admin/auth/logout", { method: "POST", credentials: "same-origin" });
+    window.location.assign("/admin/login");
+  }
+
   return (
     <>
       <section className="admin-summary">
@@ -105,6 +110,11 @@ export function AdminConsole({ episodes, initialOverrides, today }: { episodes: 
         <article><strong>{summary.scheduled}</strong><span>scheduled</span></article>
         <article><strong>{summary.disabled}</strong><span>paused</span></article>
         <article><strong>{summary.removed}</strong><span>removed</span></article>
+      </section>
+
+      <section className="admin-account-bar">
+        <div><strong>Private owner session</strong><span>Episode releases, protected content and engagement tools</span></div>
+        <button type="button" onClick={() => void signOut()}>Log out</button>
       </section>
 
       <section className="admin-toolbar">

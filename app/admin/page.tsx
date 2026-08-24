@@ -1,16 +1,17 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { episodes } from "@/data/episodes";
-import { requireChatGPTUser } from "../chatgpt-auth";
+import { getChatGPTUser } from "../chatgpt-auth";
 import { isAdmin } from "../admin-access";
 import { AdminConsole } from "../components/AdminConsole";
+import { EmailEngagementPanel } from "../components/EmailEngagementPanel";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 import { loadEpisodeOverrides } from "@/db/episode-state";
 
 export const dynamic = "force-dynamic";
 
 async function AdminBody() {
-  const user = await requireChatGPTUser("/admin");
-  if (!isAdmin(user)) notFound();
+  const user = await getChatGPTUser();
+  if (!isAdmin(user)) redirect("/admin/login");
   const initialOverrides = await loadEpisodeOverrides();
   return <AdminConsole episodes={episodes} initialOverrides={initialOverrides} today={new Date().toISOString().slice(0, 10)} />;
 }
@@ -29,7 +30,7 @@ export default function AdminPage() {
         <article><span>02</span><div><strong>Human review gate</strong><p>Education, safeguarding, accessibility and claims review remain visible work—not an automatic publishing status.</p></div></article>
         <article><span>03</span><div><strong>Release control</strong><p>Set the date and status here. Removed items leave the public library but remain recoverable in the project.</p></div></article>
       </section>
-      <section className="admin-shell"><AdminBody /></section>
+      <section className="admin-shell"><AdminBody /><EmailEngagementPanel /></section>
       <SiteFooter />
     </main>
   );

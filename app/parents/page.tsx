@@ -1,4 +1,6 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+import { IllustratedMoments } from "../components/IllustratedMoments";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 
 const moments = [
@@ -9,6 +11,8 @@ const moments = [
   ["Screens", "Warn, offer a real choice inside the limit and follow through."],
   ["Adult repair", "Own the delivery, apologise and restate the reasonable boundary."],
 ];
+
+export const metadata: Metadata = { title: "For parents and carers", description: "Find short illustrated stories, next sentences and free practice workbooks for real family pressure points.", alternates: { canonical: "/parents" } };
 
 export default function ParentsPage() {
   return (
@@ -24,6 +28,12 @@ export default function ParentsPage() {
         </div>
         <Image src="/stories/morning-transition.jpg" width={1535} height={1024} sizes="(max-width: 820px) 100vw, 46vw" priority alt="Mina ties her shoe while Alex waits with her school bag and Willo notices the changing weather" />
       </section>
+
+      <IllustratedMoments eyebrow="See the method in family life" title="Different moments. The same four-part weather shift." items={[
+        { code: "001", label: "Pause before the label", alt: "Mina and Willo notice word-weather during a rushed transition" },
+        { code: "022", label: "Keep the limit during a big feeling", alt: "A caregiver holds a calm boundary while a child has a strong feeling" },
+        { code: "063", label: "Return and repair", alt: "An adult and child reconnect after a difficult moment with Willo nearby" },
+      ]} />
 
       <section className="section adult-use-sequence">
         <div className="section-heading"><p className="eyebrow">A five-minute pathway</p><h2>Watch. Notice. Choose. Practise. Repair.</h2></div>

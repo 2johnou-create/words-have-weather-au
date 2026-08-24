@@ -1,7 +1,10 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { episodes } from "@/data/episodes";
 import { JourneyExplorer } from "../components/JourneyExplorer";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
+
+export const metadata: Metadata = { title: "Eight-stage learning journey", description: "See the learning depth, age pathway and possible Australian curriculum connections across all 120 Words Have Weather episodes.", alternates: { canonical: "/journey" } };
 
 export default async function JourneyPage({
   searchParams,

@@ -43,3 +43,4 @@ yarn-error.log*
 # repository (and ignored) prevents another Codex project's account or token
 # from being reused accidentally.
 /.github-cli/
+*.tsbuildinfo

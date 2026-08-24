@@ -1,9 +1,12 @@
-import { chatGPTSignInPath, getChatGPTUser } from "../chatgpt-auth";
+import Image from "next/image";
+import type { Metadata } from "next";
+import { getChatGPTUser } from "../chatgpt-auth";
 import { getMember } from "@/db/episode-state";
 import { MemberSignupForm } from "../components/MemberSignupForm";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Join free for educational workbooks", description: "Create a direct free Words Have Weather membership with no GitHub or ChatGPT sign-in.", alternates: { canonical: "/join" } };
 
 function safeReturnTo(value: string | undefined): string {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/episodes";
@@ -27,31 +30,24 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           <p className="eyebrow">Free educational membership</p>
           <h1>Join once.<em>Use every released workbook.</em></h1>
           <p>Membership keeps the resources free, helps us understand who the library serves and gives you a clear education-use agreement.</p>
-          <ul><li>120 episode previews remain free to browse</li><li>Parent and educator PDFs unlock after joining</li><li>Release updates are optional</li></ul>
+          <ul><li>120 episode previews remain free to browse</li><li>Parent and educator PDFs unlock after joining</li><li>Release updates are optional</li><li>No GitHub or ChatGPT sign-in</li></ul>
+          <div className="signup-illustrations" aria-label="Story moments from the Words Have Weather library">
+            <Image src="/episodes/episode-001-hero.webp" width={900} height={600} alt="Mina and Willo pause during a rushed transition" />
+            <Image src="/episodes/episode-046-hero.webp" width={900} height={600} alt="A calm adult and child practise a clearer next sentence" />
+          </div>
         </div>
         <div className="signup-panel">
-          {!user ? (
-            <>
-              <p className="eyebrow">Step 1 of 2</p>
-              <h2>Confirm who you are.</h2>
-              <p>Use the secure ChatGPT sign-in, then complete your name, email and educational-use agreement. Words Have Weather does not receive your ChatGPT password.</p>
-              <a className="button button-primary" href={chatGPTSignInPath(`/join?return_to=${encodeURIComponent(returnTo)}`)} target="_top">Continue with ChatGPT</a>
-              <small>Already signed in? The next page opens automatically.</small>
-            </>
-          ) : (
-            <>
-              <p className="eyebrow">{member ? "Your membership" : "Step 2 of 2"}</p>
-              <h2>{member ? "Review your details." : "Create your free account."}</h2>
-              <MemberSignupForm
-                defaultFirstName={defaultFirstName}
-                defaultLastName={defaultLastName}
-                defaultEmail={member?.email ?? user.email}
-                defaultUpdatesOptIn={Boolean(member?.updates_opt_in)}
-                returnTo={returnTo}
-                existing={Boolean(member)}
-              />
-            </>
-          )}
+          <p className="eyebrow">{member ? "Your membership" : "Free and direct"}</p>
+          <h2>{member ? "Review your details." : "Create your free membership."}</h2>
+          <p>Enter your details here. There is no social login and no extra account layer.</p>
+          <MemberSignupForm
+            defaultFirstName={defaultFirstName}
+            defaultLastName={defaultLastName}
+            defaultEmail={member?.email ?? user?.email ?? ""}
+            defaultUpdatesOptIn={Boolean(member?.updates_opt_in)}
+            returnTo={returnTo}
+            existing={Boolean(member)}
+          />
         </div>
       </section>
       <SiteFooter />

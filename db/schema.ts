@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const members = sqliteTable(
   "members",
@@ -40,4 +40,26 @@ export const downloadEvents = sqliteTable(
     downloadedAt: text("downloaded_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [index("idx_download_events_user_date").on(table.userId, table.downloadedAt)],
+);
+
+export const emailOutbox = sqliteTable(
+  "email_outbox",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    recipient: text("recipient").notNull(),
+    kind: text("kind", { enum: ["welcome", "weekly-highlight", "monthly-release"] }).notNull(),
+    campaignKey: text("campaign_key").notNull(),
+    subject: text("subject").notNull(),
+    html: text("html").notNull(),
+    status: text("status", { enum: ["queued", "sent", "failed"] }).notNull().default("queued"),
+    scheduledFor: text("scheduled_for").notNull(),
+    sentAt: text("sent_at"),
+    lastError: text("last_error"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("idx_email_outbox_member_campaign").on(table.userId, table.campaignKey),
+    index("idx_email_outbox_status_schedule").on(table.status, table.scheduledFor),
+  ],
 );

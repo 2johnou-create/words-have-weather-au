@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { applyOverrides, episodes } from "@/data/episodes";
 import { getMember, loadEpisodeOverrides } from "@/db/episode-state";
 import { getChatGPTUser } from "../chatgpt-auth";
@@ -6,6 +7,7 @@ import { EpisodeLibrary } from "../components/EpisodeLibrary";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "120 illustrated episode previews", description: "Browse Sprout, All Ages and Trail stories with a clear eight-stage learning journey, release dates and free educational resources.", alternates: { canonical: "/episodes" } };
 
 export default async function EpisodesPage({
   searchParams,

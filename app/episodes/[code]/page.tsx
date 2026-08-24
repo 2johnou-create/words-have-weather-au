@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isAdmin } from "@/app/admin-access";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
@@ -7,6 +8,18 @@ import { applyOverrides, episodes, formatReleaseDate } from "@/data/episodes";
 import { getMember, loadEpisodeOverrides } from "@/db/episode-state";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
+  const { code } = await params;
+  const episode = episodes.find((item) => item.code === code);
+  if (!episode) return { title: "Episode not found" };
+  return {
+    title: `Episode ${episode.code}: ${episode.title}`,
+    description: `${episode.keyLearning} Preview the word-weather, boundary and next sentence.`,
+    alternates: { canonical: `/episodes/${episode.code}` },
+    openGraph: { title: `Episode ${episode.code}: ${episode.title}`, description: episode.keyLearning, type: "article", images: [{ url: episode.heroImage, width: 900, height: 600, alt: `Illustration for ${episode.title}` }] },
+  };
+}
 
 export default async function EpisodePreviewPage({
   params,
@@ -102,7 +115,7 @@ export default async function EpisodePreviewPage({
               ) : (
                 <>
                   <a className="button button-primary" href={joinHref} target="_top">Join free to download</a>
-                  <small>Sign in once, accept the education-use terms, then return here automatically.</small>
+                  <small>Join directly with your name and email, accept the education-use terms, then return here automatically.</small>
                 </>
               )
             ) : (
