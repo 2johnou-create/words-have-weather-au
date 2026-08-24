@@ -23,6 +23,15 @@ async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext):
   const match = url.pathname.match(/^\/downloads\/episode-(\d{2,3})-(educator-worksheet|parent-practice-workbook)\.pdf$/);
   if (!match) return null;
 
+  if (match[1].length === 2) {
+    const canonical = new URL(
+      `/downloads/episode-${match[1].padStart(3, "0")}-${match[2]}.pdf`,
+      request.url,
+    );
+    canonical.search = url.search;
+    return Response.redirect(canonical, 308);
+  }
+
   const userId = request.headers.get("oai-authenticated-user-id");
   const email = request.headers.get("oai-authenticated-user-email")?.toLowerCase() ?? "";
   if (!userId) {

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { episodes } from "@/data/episodes";
 import { JourneyExplorer } from "../components/JourneyExplorer";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
@@ -13,10 +14,15 @@ export default async function JourneyPage({
     <main>
       <a className="skip-link" href="#journey-tool">Skip to learning journey tool</a>
       <SiteHeader />
-      <section className="page-hero journey-hero">
-        <p className="eyebrow">For parents, carers and educators</p>
-        <h1>See the learning.<em>Choose the right depth.</em></h1>
-        <p>This eight-stage map shows what each group of episodes practises, how the learning grows and where it may connect with Australian curriculum frameworks.</p>
+      <section className="page-hero journey-hero page-hero-with-art">
+        <div className="page-hero-copy">
+          <p className="eyebrow">For parents, carers and educators</p>
+          <h1>See the learning.<em>Choose the right depth.</em></h1>
+          <p>This eight-stage map shows what each group of episodes practises, how the learning grows and where it may connect with Australian curriculum frameworks.</p>
+        </div>
+        <div className="page-hero-art">
+          <Image src="/stories/emotional-moments.webp" width={1672} height={941} sizes="(max-width: 760px) 100vw, 42vw" priority alt="The Words Have Weather characters noticing different emotional weather with Willo nearby" />
+        </div>
       </section>
       <section className="section journey-section" id="journey-tool">
         <JourneyExplorer episodes={episodes} initialAudience={initialAudience} />

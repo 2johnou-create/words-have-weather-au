@@ -81,6 +81,20 @@ test("anonymous workbook downloads are sent through the member journey", async (
   assert.match(response.headers.get("location") ?? "", /\/signin-with-chatgpt[?]return_to=%2Fdownloads%2Fepisode-001-educator-worksheet[.]pdf$/);
 });
 
+test("legacy two-digit workbook links redirect to the canonical protected path", async () => {
+  const worker = await getWorker();
+  const response = await worker.fetch(
+    new Request("http://localhost/downloads/episode-01-parent-practice-workbook.pdf?from=old-site"),
+    { ASSETS: { fetch: async () => new Response("asset") } },
+    testContext(),
+  );
+  assert.equal(response.status, 308);
+  assert.equal(
+    response.headers.get("location"),
+    "http://localhost/downloads/episode-001-parent-practice-workbook.pdf?from=old-site",
+  );
+});
+
 test("member, admin and curriculum safeguards are wired into the site", async () => {
   const [worker, signup, admin, journey, hosting, migration, vite] = await Promise.all([
     readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
@@ -96,6 +110,7 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(worker, /release_date/);
   assert.match(worker, /RESOURCES[.]get/);
   assert.doesNotMatch(worker, /bootstrap-resources|RESOURCE_BOOTSTRAP_TOKEN/);
+  assert.match(worker, /padStart\(3, "0"\)/);
   assert.match(signup, /firstName/);
   assert.match(signup, /lastName/);
   assert.match(signup, /educationTerms/);
@@ -114,4 +129,28 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(migration, /CREATE TABLE `episode_overrides`/);
   assert.match(vite, /binding: "ASSETS", run_worker_first: \["\/downloads\/\*"\]/);
   await assert.rejects(access(new URL("../app/_sites-preview", projectRoot)));
+});
+
+test("story imagery is responsive and all illustrated scenes are present", async () => {
+  const [home, journey, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/journey/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(css, /img \{ max-width: 100%; height: auto;/);
+  assert.match(home, /morning-transition[.]jpg/);
+  assert.match(home, /peer-repair[.]jpg/);
+  assert.match(home, /screen-transition[.]jpg/);
+  assert.match(journey, /emotional-moments[.]webp/);
+  for (const name of [
+    "morning-transition.jpg",
+    "peer-repair.jpg",
+    "screen-transition.jpg",
+    "spill-repair.webp",
+    "private-correction.webp",
+    "kerb-safety.webp",
+    "emotional-moments.webp",
+  ]) {
+    await access(new URL(`../public/stories/${name}`, import.meta.url));
+  }
 });
