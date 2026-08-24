@@ -26,6 +26,7 @@ The resources teach adult reflection. They do not assess children, prescribe one
 - Write-in lines begin below the measured prompt, never at a fixed position that can collide with wrapped text.
 - Headings are limited to two lines. Long wording is shortened editorially rather than squeezed below the minimum size.
 - Colour supports hierarchy but never carries the only meaning.
+- Raster illustrations are pre-sized as JPEG and embedded without decoding their compact DCT streams; optimisation must never rasterise or alter the vector text layer.
 
 ## Educator worksheet pattern - 5 pages
 
