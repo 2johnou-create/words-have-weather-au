@@ -94,6 +94,8 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(worker, /episode-\(\\d\{2,3\}\)/);
   assert.match(worker, /SELECT user_id FROM members/);
   assert.match(worker, /release_date/);
+  assert.match(worker, /RESOURCES[.]get/);
+  assert.match(worker, /bootstrap-resources/);
   assert.match(signup, /firstName/);
   assert.match(signup, /lastName/);
   assert.match(signup, /educationTerms/);
@@ -107,6 +109,7 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(journey, /Possible connections, not a packaged curriculum/);
   assert.match(journey, /australiancurriculum[.]edu[.]au/);
   assert.equal(JSON.parse(hosting).d1, "DB");
+  assert.equal(JSON.parse(hosting).r2, "RESOURCES");
   assert.match(migration, /CREATE TABLE `members`/);
   assert.match(migration, /CREATE TABLE `episode_overrides`/);
   assert.match(vite, /binding: "ASSETS", run_worker_first: \["\/downloads\/\*"\]/);
