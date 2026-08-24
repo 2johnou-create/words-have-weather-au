@@ -18,6 +18,50 @@ interface Env {
 
 const ADMIN_EMAILS = new Set(["2johnou@gmail.com"]);
 
+async function syncWorkbookResources(request: Request, env: Env): Promise<Response | null> {
+  const url = new URL(request.url);
+  if (url.pathname !== "/api/admin/resource-sync") return null;
+  if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+
+  const userId = request.headers.get("oai-authenticated-user-id");
+  const email = request.headers.get("oai-authenticated-user-email")?.toLowerCase() ?? "";
+  if (!userId || !ADMIN_EMAILS.has(email)) return new Response("Forbidden", { status: 403 });
+
+  let payload: { start?: number; count?: number };
+  try {
+    payload = await request.json() as { start?: number; count?: number };
+  } catch {
+    return new Response("Invalid request", { status: 400 });
+  }
+  const start = Number(payload.start);
+  const count = Number(payload.count ?? 5);
+  if (!Number.isInteger(start) || start < 1 || start > 120 || !Number.isInteger(count) || count < 1 || count > 10) {
+    return new Response("Invalid episode range", { status: 400 });
+  }
+
+  let copied = 0;
+  let existing = 0;
+  const end = Math.min(120, start + count - 1);
+  for (let episodeId = start; episodeId <= end; episodeId += 1) {
+    const code = String(episodeId).padStart(3, "0");
+    for (const suffix of ["educator-worksheet", "parent-practice-workbook"] as const) {
+      const filename = `episode-${code}-${suffix}.pdf`;
+      const key = `downloads/${filename}`;
+      if (await env.RESOURCES.head(key)) {
+        existing += 1;
+        continue;
+      }
+      const assetUrl = new URL(`/downloads/${filename}`, request.url);
+      const asset = await env.ASSETS.fetch(new Request(assetUrl));
+      if (!asset.ok || !asset.body) return new Response(`Missing staged file: ${filename}`, { status: 500 });
+      await env.RESOURCES.put(key, asset.body, { httpMetadata: { contentType: "application/pdf" } });
+      copied += 1;
+    }
+  }
+
+  return Response.json({ start, end, copied, existing });
+}
+
 async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext): Promise<Response | null> {
   const url = new URL(request.url);
   const match = url.pathname.match(/^\/downloads\/episode-(\d{2,3})-(educator-worksheet|parent-practice-workbook)\.pdf$/);
@@ -108,6 +152,9 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    const sync = await syncWorkbookResources(request, env);
+    if (sync) return sync;
 
     const download = await gatedDownload(request, env, ctx);
     if (download) return download;
