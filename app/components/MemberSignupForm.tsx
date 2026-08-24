@@ -20,26 +20,31 @@ export function MemberSignupForm({ defaultFirstName, defaultLastName, defaultEma
     setBusy(true);
     setStatus("");
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/members", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        firstName: form.get("firstName"),
-        lastName: form.get("lastName"),
-        email: form.get("email"),
-        educationTerms: form.get("educationTerms") === "on",
-        updatesOptIn: form.get("updatesOptIn") === "on",
-      }),
-      credentials: "same-origin",
-    });
-    const payload = await response.json() as { error?: string };
-    if (!response.ok) {
+    try {
+      const response = await fetch("/api/members", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.get("firstName"),
+          lastName: form.get("lastName"),
+          email: form.get("email"),
+          educationTerms: form.get("educationTerms") === "on",
+          updatesOptIn: form.get("updatesOptIn") === "on",
+        }),
+        credentials: "same-origin",
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        setBusy(false);
+        setStatus(payload.error ?? "We could not save your membership. Please try again.");
+        return;
+      }
+      setStatus("Your free membership is ready. Opening your resource...");
+      window.setTimeout(() => window.location.assign(returnTo), 400);
+    } catch {
       setBusy(false);
-      setStatus(payload.error ?? "We could not save your membership. Please try again.");
-      return;
+      setStatus("The membership service could not be reached. Please try again.");
     }
-    setStatus("Your free membership is ready. Opening your resource...");
-    window.setTimeout(() => window.location.assign(returnTo), 400);
   }
 
   return (

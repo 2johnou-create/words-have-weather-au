@@ -11,19 +11,24 @@ export function AdminLoginForm() {
     setBusy(true);
     setMessage("");
     const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/admin/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
-    });
-    const payload = await response.json() as { error?: string };
-    if (!response.ok) {
+    try {
+      const response = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email: form.get("email"), password: form.get("password") }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        setBusy(false);
+        setMessage(payload.error ?? "Login failed. Please try again.");
+        return;
+      }
+      window.location.assign("/admin");
+    } catch {
       setBusy(false);
-      setMessage(payload.error ?? "Login failed. Please try again.");
-      return;
+      setMessage("The secure login service could not be reached. Please try again.");
     }
-    window.location.assign("/admin");
   }
 
   return (

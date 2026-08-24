@@ -111,7 +111,7 @@ export async function verifyPasswordRecord(password: string, record: string | un
   const iterations = Number(iterationText);
   const salt = base64UrlToBytes(saltText ?? "");
   const expected = base64UrlToBytes(hashText ?? "");
-  if (algorithm !== "pbkdf2_sha256" || extra || !Number.isInteger(iterations) || iterations < 200_000 || !salt || !expected) return false;
+  if (algorithm !== "pbkdf2_sha256" || extra || iterations !== 100_000 || !salt || !expected) return false;
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const actual = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: salt.buffer as ArrayBuffer, iterations }, key, expected.byteLength * 8));
   if (actual.byteLength !== expected.byteLength) return false;
