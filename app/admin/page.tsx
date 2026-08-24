@@ -22,7 +22,12 @@ export default function AdminPage() {
       <section className="page-hero admin-hero">
         <p className="eyebrow">Owner release console</p>
         <h1>Plan the journey.<em>Control every release.</em></h1>
-        <p>Enable, pause, remove or reschedule episodes. Select any filtered group to download complete educator, parent, preview and metadata packs.</p>
+        <p>Preview first, review the learning record, then enable, pause, remove or reschedule. Select any filtered group to download complete educator, parent, artwork and metadata packs.</p>
+      </section>
+      <section className="admin-workflow" aria-label="Content management workflow">
+        <article><span>01</span><div><strong>Content record</strong><p>Story preview, age lens, learning stage, key learning, framework mapping and both resource files stay together.</p></div></article>
+        <article><span>02</span><div><strong>Human review gate</strong><p>Education, safeguarding, accessibility and claims review remain visible work—not an automatic publishing status.</p></div></article>
+        <article><span>03</span><div><strong>Release control</strong><p>Set the date and status here. Removed items leave the public library but remain recoverable in the project.</p></div></article>
       </section>
       <section className="admin-shell"><AdminBody /></section>
       <SiteFooter />

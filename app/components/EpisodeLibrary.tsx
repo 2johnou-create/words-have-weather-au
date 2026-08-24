@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import type { EffectiveEpisode } from "@/data/episodes";
 import { formatReleaseDate, monthLabel } from "@/data/episodes";
 
@@ -86,14 +85,14 @@ export function EpisodeLibrary({ episodes, initialCategory, today, canDownload }
           const joinHref = `/join?return_to=${encodeURIComponent(previewHref)}`;
           return (
             <article className={`episode-card category-${episode.category.toLowerCase().replaceAll(" ", "-")}`} key={episode.id}>
-              <Link className="episode-cover" href={previewHref} aria-label={`Preview Episode ${episode.code}: ${episode.title}`}>
+              <a className="episode-cover" href={previewHref} target="_top" aria-label={`Preview Episode ${episode.code}: ${episode.title}`}>
                 <Image width={900} height={600} sizes="(max-width: 760px) 100vw, (max-width: 1050px) 50vw, 33vw" src={episode.heroImage} alt={`Story illustration for Episode ${episode.code}, ${episode.title}`} />
                 <span className={`release-badge ${state.className}`}>{state.label}</span>
-              </Link>
+              </a>
               <div className="episode-card-copy">
                 <header><span>Episode {episode.code}</span><span>{episode.category} · {episode.ages}</span></header>
                 <p className="episode-depth">Stage {episode.stage}: {episode.stageTitle} · {episode.depth}</p>
-                <h2><Link href={previewHref}>{episode.title}</Link></h2>
+                <h2><a href={previewHref} target="_top">{episode.title}</a></h2>
                 <p>{episode.keyLearning}</p>
                 <details>
                   <summary>Preview the story move</summary>
@@ -104,7 +103,7 @@ export function EpisodeLibrary({ episodes, initialCategory, today, canDownload }
                   </dl>
                 </details>
                 <div className="episode-actions">
-                  <Link className="preview-action" href={previewHref}><small>Story, learning and practice</small>Preview episode <span aria-hidden="true">→</span></Link>
+                  <a className="preview-action" href={previewHref} target="_top"><small>Story, learning and practice</small>Preview episode <span aria-hidden="true">→</span></a>
                   {state.available ? (
                     canDownload ? (
                       <>
@@ -112,7 +111,7 @@ export function EpisodeLibrary({ episodes, initialCategory, today, canDownload }
                         <a className="parent-action" href={episode.parentPdf} download><small>6-page PDF</small>Parent workbook <span aria-hidden="true">↓</span></a>
                       </>
                     ) : (
-                      <Link className="join-action" href={joinHref}><small>Free · educational use</small>Join to download both PDFs <span aria-hidden="true">→</span></Link>
+                      <a className="join-action" href={joinHref} target="_top"><small>Free · educational use</small>Join to download both PDFs <span aria-hidden="true">→</span></a>
                     )
                   ) : (
                     <p className="not-yet">Preview available now. Workbooks {state.className === "paused" ? "are temporarily paused" : `release ${formatReleaseDate(episode.effectiveReleaseDate)}`}.</p>

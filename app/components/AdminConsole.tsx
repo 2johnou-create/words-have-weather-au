@@ -138,7 +138,7 @@ export function AdminConsole({ episodes, initialOverrides, today }: { episodes: 
               <td><span>{episode.category}</span><small>Stage {episode.stage} · {episode.depth}</small></td>
               <td><input type="date" value={episode.effectiveReleaseDate} onChange={(event) => void update([episode.id], { releaseDate: event.target.value }, `Episode ${episode.code} rescheduled.`)} /></td>
               <td><select value={episode.effectiveStatus} onChange={(event) => void update([episode.id], { status: event.target.value as EpisodeStatus }, `Episode ${episode.code} updated.`)}><option value="enabled">Enabled</option><option value="disabled">Disabled</option><option value="removed">Removed</option></select></td>
-              <td><a href={episode.educatorPdf}>Educator</a><a href={episode.parentPdf}>Parent</a><a href={episode.contentJson}>Metadata</a></td>
+              <td><a href={`/episodes/${episode.code}`} target="_top">Preview</a><a href={episode.educatorPdf}>Educator</a><a href={episode.parentPdf}>Parent</a><a href={episode.contentJson}>Metadata</a></td>
             </tr>
           ))}</tbody>
         </table>

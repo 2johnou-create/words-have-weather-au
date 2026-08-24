@@ -14,23 +14,33 @@ function testContext() {
   return { waitUntil() {}, passThroughOnException() {} };
 }
 
-test("the expanded landing page keeps the complete public promise", async () => {
-  const [page, layout] = await Promise.all([
+test("the rebuilt landing page explains the promise before presenting the catalogue", async () => {
+  const [page, layout, parents, educators] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/parents/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/educators/page.tsx", import.meta.url), "utf8"),
   ]);
-  const source = `${layout}\n${page}`;
-  assert.match(source, /Words Have Weather \| 120 stories/i);
-  assert.match(source, /120 short stories · one connected learning journey/i);
-  assert.match(source, /Explore all 120 episodes/);
-  assert.equal((source.match(/count: 40/g) ?? []).length, 3);
+  const source = `${layout}\n${page}\n${parents}\n${educators}`;
+  assert.match(source, /Words Have Weather \| Keep the boundary/i);
+  assert.match(source, /Words have weather/);
+  assert.match(source, /Keep the boundary/);
+  assert.match(source, /Change the weather/);
+  assert.match(source, /Pressure line/);
+  assert.match(source, /Possible word-weather/);
+  assert.match(source, /Next sentence/);
+  assert.match(source, /Open all 120 episode previews/);
+  assert.equal((page.match(/name: "(?:Sprout|All Ages|Trail)"/g) ?? []).length, 3);
   assert.match(source, /Sprout/);
   assert.match(source, /All Ages/);
   assert.match(source, /Trail/);
-  assert.match(source, /eight-stage learning arc/i);
-  assert.match(source, /15.*scheduled each month/is);
+  assert.match(source, /Eight stages/i);
+  assert.match(source, /15 stories across all three pathways/i);
   assert.match(source, /Free educational membership/);
-  assert.match(source, /educational-use terms/);
+  assert.match(source, /education-use terms/);
+  assert.match(source, /EYLF V2[.]0/);
+  assert.match(source, /Australian Curriculum v9[.]0/);
+  assert.match(source, /not government approval, endorsement/i);
   assert.match(source, /character-lineup[.]png/);
   assert.doesNotMatch(source, /29 Coffee|commercial promotion|codex-preview/i);
 });
@@ -73,6 +83,7 @@ test("all 120 episode heroes, protected PDFs, previews and metadata files exist"
   assert.equal(heroBytes.size, 120);
   await access(new URL("../public/catalog/episodes.json", import.meta.url));
   await access(new URL("../public/og-120.png", import.meta.url));
+  await access(new URL("../public/og-rebuild.png", import.meta.url));
   const publicDownloads = await readdir(new URL("../public/downloads/", import.meta.url));
   assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
 });
@@ -92,7 +103,17 @@ test("every episode card leads to a real public preview with clear gated actions
   assert.match(episodePage, /Join free to download/);
   assert.match(episodePage, /Download educator worksheet/);
   assert.match(home, /episode[.]heroImage/);
-  assert.match(home, /Preview episode/);
+  assert.match(home, /Preview story \+ next sentence/);
+});
+
+test("production-safe document links are used for every internal route", async () => {
+  const files = await readdir(new URL("../app/", import.meta.url), { recursive: true });
+  const tsxFiles = files.filter((name) => name.endsWith(".tsx"));
+  const sources = await Promise.all(tsxFiles.map((name) => readFile(new URL(`../app/${name}`, import.meta.url), "utf8")));
+  assert.equal(sources.some((source) => source.includes('from "next/link"')), false);
+  assert.match(sources.join("\n"), /href="\/parents" target="_top"/);
+  assert.match(sources.join("\n"), /href="\/educators" target="_top"/);
+  assert.match(sources.join("\n"), /href=\{`\/episodes\/\$\{episode[.]code\}`\} target="_top"/);
 });
 
 test("anonymous workbook downloads are sent through the member journey", async () => {

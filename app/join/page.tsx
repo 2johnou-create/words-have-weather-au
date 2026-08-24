@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { chatGPTSignInPath, getChatGPTUser } from "../chatgpt-auth";
 import { getMember } from "@/db/episode-state";
 import { MemberSignupForm } from "../components/MemberSignupForm";
@@ -36,7 +35,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
               <p className="eyebrow">Step 1 of 2</p>
               <h2>Confirm who you are.</h2>
               <p>Use the secure ChatGPT sign-in, then complete your name, email and educational-use agreement. Words Have Weather does not receive your ChatGPT password.</p>
-              <Link className="button button-primary" href={chatGPTSignInPath(`/join?return_to=${encodeURIComponent(returnTo)}`)}>Continue with ChatGPT</Link>
+              <a className="button button-primary" href={chatGPTSignInPath(`/join?return_to=${encodeURIComponent(returnTo)}`)} target="_top">Continue with ChatGPT</a>
               <small>Already signed in? The next page opens automatically.</small>
             </>
           ) : (

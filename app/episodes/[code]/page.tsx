@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isAdmin } from "@/app/admin-access";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
@@ -47,7 +46,7 @@ export default async function EpisodePreviewPage({
         </div>
 
         <div className="episode-preview-intro">
-          <Link className="episode-back-link" href={`/episodes?category=${encodeURIComponent(episode.category)}`}>← Back to {episode.category}</Link>
+          <a className="episode-back-link" href={`/episodes?category=${encodeURIComponent(episode.category)}`} target="_top">← Back to {episode.category}</a>
           <p className="eyebrow">Episode {episode.code} · {episode.category} · {episode.ages}</p>
           <h1>{episode.title}</h1>
           <p className="episode-preview-lead">{episode.keyLearning}</p>
@@ -83,7 +82,7 @@ export default async function EpisodePreviewPage({
           <div className="episode-curriculum-links">
             <h3>Possible curriculum and key-learning connections</h3>
             <ul>{episode.curriculum.map((item) => <li key={item}>{item}</li>)}</ul>
-            <Link href={`/journey?audience=educators`}>Open the complete learning journey <span aria-hidden="true">→</span></Link>
+            <a href="/journey?audience=educators" target="_top">Open the complete learning journey <span aria-hidden="true">→</span></a>
           </div>
         </section>
 
@@ -102,7 +101,7 @@ export default async function EpisodePreviewPage({
                 </>
               ) : (
                 <>
-                  <Link className="button button-primary" href={joinHref}>Join free to download</Link>
+                  <a className="button button-primary" href={joinHref} target="_top">Join free to download</a>
                   <small>Sign in once, accept the education-use terms, then return here automatically.</small>
                 </>
               )
@@ -116,9 +115,9 @@ export default async function EpisodePreviewPage({
         </section>
 
         <nav className="episode-preview-nav" aria-label="Episode navigation">
-          {episode.id > 1 ? <Link className="previous" href={`/episodes/${String(episode.id - 1).padStart(3, "0")}`}>← Previous episode</Link> : <span />}
-          <Link className="all-episodes" href="/episodes">All 120 episodes</Link>
-          {episode.id < 120 ? <Link className="next" href={`/episodes/${String(episode.id + 1).padStart(3, "0")}`}>Next episode →</Link> : <span />}
+          {episode.id > 1 ? <a className="previous" href={`/episodes/${String(episode.id - 1).padStart(3, "0")}`} target="_top">← Previous episode</a> : <span />}
+          <a className="all-episodes" href="/episodes" target="_top">All 120 episodes</a>
+          {episode.id < 120 ? <a className="next" href={`/episodes/${String(episode.id + 1).padStart(3, "0")}`} target="_top">Next episode →</a> : <span />}
         </nav>
       </article>
 
