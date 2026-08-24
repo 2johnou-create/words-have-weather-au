@@ -7,7 +7,6 @@ interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   RESOURCES: R2Bucket;
-  RESOURCE_BOOTSTRAP_TOKEN?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -18,40 +17,6 @@ interface Env {
 }
 
 const ADMIN_EMAILS = new Set(["2johnou@gmail.com"]);
-
-async function bootstrapResources(request: Request, env: Env): Promise<Response | null> {
-  const url = new URL(request.url);
-  if (url.pathname !== "/api/admin/bootstrap-resources") return null;
-  if (request.method !== "POST") return new Response("Not found", { status: 404 });
-  const expected = env.RESOURCE_BOOTSTRAP_TOKEN;
-  if (!expected || request.headers.get("authorization") !== `Bearer ${expected}`) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  const start = Number(url.searchParams.get("start"));
-  const end = Number(url.searchParams.get("end"));
-  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end > 120 || end < start || end - start > 14) {
-    return Response.json({ error: "Use an episode range of no more than 15." }, { status: 400 });
-  }
-
-  let stored = 0;
-  for (let episodeId = start; episodeId <= end; episodeId += 1) {
-    const code = String(episodeId).padStart(3, "0");
-    for (const audience of ["educator-worksheet", "parent-practice-workbook"]) {
-      const filename = `episode-${code}-${audience}.pdf`;
-      const assetUrl = new URL(`/downloads/${filename}`, request.url);
-      const asset = await env.ASSETS.fetch(new Request(assetUrl));
-      if (!asset.ok || !asset.body) {
-        return Response.json({ error: `Could not read ${filename}`, stored }, { status: 502 });
-      }
-      await env.RESOURCES.put(`downloads/${filename}`, asset.body, {
-        httpMetadata: { contentType: "application/pdf" },
-      });
-      stored += 1;
-    }
-  }
-  return Response.json({ ok: true, start, end, stored });
-}
 
 async function gatedDownload(request: Request, env: Env, ctx: ExecutionContext): Promise<Response | null> {
   const url = new URL(request.url);
@@ -123,9 +88,6 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-
-    const bootstrap = await bootstrapResources(request, env);
-    if (bootstrap) return bootstrap;
 
     const download = await gatedDownload(request, env, ctx);
     if (download) return download;

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const projectRoot = new URL("../", import.meta.url);
@@ -57,17 +57,17 @@ test("catalogue contains a balanced 120-episode learning and release plan", asyn
   }
 });
 
-test("all 120 complete episode packs and metadata files exist", async () => {
+test("all 120 public previews and metadata files exist without exposed PDF assets", async () => {
   for (let episode = 1; episode <= 120; episode += 1) {
     const id = String(episode).padStart(3, "0");
-    await access(new URL(`../public/downloads/episode-${id}-educator-worksheet.pdf`, import.meta.url));
-    await access(new URL(`../public/downloads/episode-${id}-parent-practice-workbook.pdf`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-educator-worksheet-preview.webp`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-parent-practice-workbook-preview.webp`, import.meta.url));
     await access(new URL(`../public/content/episode-${id}.json`, import.meta.url));
   }
   await access(new URL("../public/catalog/episodes.json", import.meta.url));
   await access(new URL("../public/og-120.png", import.meta.url));
+  const publicDownloads = await readdir(new URL("../public/downloads/", import.meta.url));
+  assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 0);
 });
 
 test("anonymous workbook downloads are sent through the member journey", async () => {
@@ -95,7 +95,7 @@ test("member, admin and curriculum safeguards are wired into the site", async ()
   assert.match(worker, /SELECT user_id FROM members/);
   assert.match(worker, /release_date/);
   assert.match(worker, /RESOURCES[.]get/);
-  assert.match(worker, /bootstrap-resources/);
+  assert.doesNotMatch(worker, /bootstrap-resources|RESOURCE_BOOTSTRAP_TOKEN/);
   assert.match(signup, /firstName/);
   assert.match(signup, /lastName/);
   assert.match(signup, /educationTerms/);
