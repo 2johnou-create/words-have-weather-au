@@ -76,16 +76,17 @@ test("all 120 episode heroes, protected PDFs, previews and metadata files exist"
     heroBytes.add(hero.toString("base64"));
     await access(new URL(`../public/resources/episode-${id}-educator-worksheet-preview.webp`, import.meta.url));
     await access(new URL(`../public/resources/episode-${id}-parent-practice-workbook-preview.webp`, import.meta.url));
-    await access(new URL(`../public/downloads/episode-${id}-educator-worksheet.pdf`, import.meta.url));
-    await access(new URL(`../public/downloads/episode-${id}-parent-practice-workbook.pdf`, import.meta.url));
+    await access(new URL(`../protected-resources/downloads/episode-${id}-educator-worksheet.pdf`, import.meta.url));
+    await access(new URL(`../protected-resources/downloads/episode-${id}-parent-practice-workbook.pdf`, import.meta.url));
     await access(new URL(`../public/content/episode-${id}.json`, import.meta.url));
   }
   assert.equal(heroBytes.size, 120);
   await access(new URL("../public/catalog/episodes.json", import.meta.url));
   await access(new URL("../public/og-120.png", import.meta.url));
   await access(new URL("../public/og-rebuild.png", import.meta.url));
-  const publicDownloads = await readdir(new URL("../public/downloads/", import.meta.url));
-  assert.equal(publicDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
+  const protectedDownloads = await readdir(new URL("../protected-resources/downloads/", import.meta.url));
+  assert.equal(protectedDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
+  await assert.rejects(access(new URL("../public/downloads/", projectRoot)));
 });
 
 test("every episode card leads to a real public preview with clear gated actions", async () => {
@@ -163,9 +164,9 @@ test("a signed-up member receives the protected versioned PDF asset", async () =
       headers: { "oai-authenticated-user-id": "member-1" },
     }),
     {
-      ASSETS: { fetch: async () => new Response("%PDF-episode-001", { status: 200, headers: { "content-type": "application/pdf" } }) },
+      ASSETS: { fetch: async () => new Response("asset") },
       DB: db,
-      RESOURCES: { get: async () => null },
+      RESOURCES: { get: async () => ({ body: "%PDF-episode-001", size: 16, httpEtag: "etag-1", httpMetadata: { contentType: "application/pdf" } }) },
     },
     testContext(),
   );

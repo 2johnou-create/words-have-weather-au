@@ -96,26 +96,6 @@ export function AdminConsole({ episodes, initialOverrides, today }: { episodes: 
     }
   }
 
-  async function syncProtectedResources() {
-    setBusy(true);
-    try {
-      for (let start = 1; start <= 120; start += 5) {
-        setMessage(`Securing workbook files for Episodes ${String(start).padStart(3, "0")}–${String(Math.min(120, start + 4)).padStart(3, "0")}...`);
-        const response = await fetch("/api/admin/resource-sync", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ start, count: 5 }),
-        });
-        if (!response.ok) throw new Error(await response.text());
-      }
-      setMessage("All 240 workbook files are secured in protected storage.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Protected storage sync failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const selectedIds = Array.from(selected);
 
   return (
@@ -144,7 +124,6 @@ export function AdminConsole({ episodes, initialOverrides, today }: { episodes: 
           <button disabled={busy || !scheduleDate} type="button" onClick={() => void update(selectedIds, { releaseDate: scheduleDate, status: "enabled" }, `Selected episodes scheduled for ${formatReleaseDate(scheduleDate)}.`)}>Schedule</button>
           <button disabled={busy} type="button" onClick={() => void update(selectedIds, { action: "reset" }, "Selected episodes restored to the planned 15-per-month schedule.")}>Restore plan</button>
           <button disabled={busy} type="button" className="download-bulk" onClick={() => void downloadSelected()}>Download selected contents</button>
-          <button disabled={busy} type="button" onClick={() => void syncProtectedResources()}>Secure workbook storage</button>
         </div>
         <p className="admin-message" role="status">{message}</p>
       </section>
