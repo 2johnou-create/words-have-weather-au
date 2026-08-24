@@ -84,6 +84,7 @@ test("all 120 episode heroes, protected PDFs, previews and metadata files exist"
   await access(new URL("../public/catalog/episodes.json", import.meta.url));
   await access(new URL("../public/og-120.png", import.meta.url));
   await access(new URL("../public/og-rebuild.png", import.meta.url));
+  await access(new URL("../app/favicon.ico/route.ts", import.meta.url));
   const protectedDownloads = await readdir(new URL("../protected-resources/downloads/", import.meta.url));
   assert.equal(protectedDownloads.filter((name) => name.endsWith(".pdf")).length, 240);
   await assert.rejects(access(new URL("../public/downloads/", projectRoot)));
