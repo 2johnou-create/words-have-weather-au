@@ -2,6 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import catalog from "../data/episode-catalog.json";
+import { ebooks } from "../data/ebooks";
 import { sessionTokenFromRequest, verifySiteSession } from "../lib/session";
 
 interface Env {
@@ -19,6 +20,43 @@ interface Env {
 }
 
 type RuntimeEnv = Env | undefined;
+
+async function gatedEbookDownload(request: Request, env: RuntimeEnv): Promise<Response | null> {
+  const url = new URL(request.url);
+  const match = url.pathname.match(/^\/ebook-downloads\/([a-z0-9-]+?)(-education-edition)?\.(pdf|epub)$/);
+  if (!match) return null;
+  if (!env) return new Response("Resource storage is unavailable.", { status: 503 });
+  const slug = match[1];
+  const fileType = match[3];
+  const book = ebooks.find((item) => item.slug === slug);
+  if (!book || (fileType === "pdf" && !match[2]) || (fileType === "epub" && match[2])) return new Response("Resource not found", { status: 404 });
+
+  const session = await verifySiteSession(sessionTokenFromRequest(request), env.AUTH_SECRET);
+  if (!session) {
+    const join = new URL("/join", request.url);
+    join.searchParams.set("return_to", url.pathname);
+    return Response.redirect(join, 302);
+  }
+  if (session.kind !== "admin") {
+    const member = await env.DB.prepare("SELECT user_id FROM members WHERE user_id = ? LIMIT 1").bind(session.userId).first();
+    if (!member) {
+      const join = new URL("/join", request.url);
+      join.searchParams.set("return_to", url.pathname);
+      return Response.redirect(join, 302);
+    }
+  }
+
+  const filename = url.pathname.split("/").pop()!;
+  const asset = await env.RESOURCES.get(`ebook-downloads/${filename}`);
+  if (!asset) return new Response("Resource not found", { status: 404 });
+  const headers = new Headers();
+  headers.set("content-type", asset.httpMetadata?.contentType ?? (fileType === "epub" ? "application/epub+zip" : "application/pdf"));
+  headers.set("content-length", String(asset.size));
+  headers.set("etag", asset.httpEtag);
+  headers.set("cache-control", "private, no-store");
+  headers.set("content-disposition", `attachment; filename="${filename}"`);
+  return new Response(asset.body, { status: 200, headers });
+}
 
 async function gatedDownload(request: Request, env: RuntimeEnv, ctx: ExecutionContext): Promise<Response | null> {
   const url = new URL(request.url);
@@ -100,6 +138,9 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: RuntimeEnv, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    const ebookDownload = await gatedEbookDownload(request, env);
+    if (ebookDownload) return ebookDownload;
 
     const download = await gatedDownload(request, env, ctx);
     if (download) return download;

@@ -15,6 +15,13 @@
       "when": 1787604723427,
       "tag": "0001_round_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787619019645,
+      "tag": "0002_burly_quasimodo",
+      "breakpoints": true
     }
   ]
 }

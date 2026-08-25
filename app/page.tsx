@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { applyOverrides, episodes, formatReleaseDate, stages } from "@/data/episodes";
 import { loadEpisodeOverrides } from "@/db/episode-state";
+import { ebooks } from "@/data/ebooks";
 import { SiteFooter, SiteHeader } from "./components/SiteChrome";
 
 export const dynamic = "force-dynamic";
@@ -234,6 +235,14 @@ export default async function Home() {
           ))}
         </div>
         <a className="button button-primary" href="/episodes" target="_top">Open all 120 episode previews</a>
+      </section>
+
+      <section className="section home-ebook-launch" aria-labelledby="home-ebook-heading">
+        <div className="section-heading heading-row"><div><p className="eyebrow">New · Story eBooks</p><h2 id="home-ebook-heading">A longer story gives the next sentence somewhere to live.</h2></div><p>Pause at the pressure line, notice the illustrated weather and turn the page into one useful adult move. Every final page includes a key message and shared-learning ideas.</p></div>
+        <div className="home-ebook-grid">
+          {ebooks.slice(0, 3).map((book) => <article key={book.slug}><a href={`/ebooks/${book.slug}`} target="_top"><Image src={book.pages[0].image} width={520} height={430} sizes="(max-width: 760px) 100vw, 33vw" alt={book.pages[0].imageAlt} /></a><div><span>{book.category} · Ages {book.ages}</span><h3><a href={`/ebooks/${book.slug}`} target="_top">{book.title}</a></h3><blockquote>{book.hook}</blockquote></div></article>)}
+        </div>
+        <div className="home-ebook-actions"><a className="button button-primary" href="/ebooks" target="_top">Open all six Story eBooks</a><span>Touch reader · landscape PDF · fixed-layout EPUB 3</span></div>
       </section>
 
       <section className="section home-journey" id="learning-journey">

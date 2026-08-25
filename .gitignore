@@ -38,6 +38,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+/tmp/
 
 # Project-local GitHub CLI authentication. Keeping this directory inside the
 # repository (and ignored) prevents another Codex project's account or token

@@ -63,3 +63,16 @@ export const emailOutbox = sqliteTable(
     index("idx_email_outbox_status_schedule").on(table.status, table.scheduledFor),
   ],
 );
+
+export const siteNotices = sqliteTable("site_notices", {
+  id: text("id").primaryKey(),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  message: text("message").notNull(),
+  linkLabel: text("link_label"),
+  linkHref: text("link_href"),
+  tone: text("tone", { enum: ["sage", "sun", "terracotta"] }).notNull().default("sage"),
+  startsAt: text("starts_at"),
+  endsAt: text("ends_at"),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});

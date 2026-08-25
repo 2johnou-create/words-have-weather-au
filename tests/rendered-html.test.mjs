@@ -136,6 +136,17 @@ test("anonymous workbook downloads are sent through the member journey", async (
   assert.match(response.headers.get("location") ?? "", /\/join[?]return_to=%2Fdownloads%2Fepisode-001-educator-worksheet[.]pdf$/);
 });
 
+test("anonymous Story eBook downloads are sent through the free member journey", async () => {
+  const worker = await getWorker();
+  const response = await worker.fetch(
+    new Request("http://localhost/ebook-downloads/mina-and-the-missing-shoe-education-edition.pdf"),
+    { ASSETS: { fetch: async () => new Response("asset") } },
+    testContext(),
+  );
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get("location") ?? "", /\/join[?]return_to=%2Febook-downloads%2Fmina-and-the-missing-shoe-education-edition[.]pdf$/);
+});
+
 test("legacy two-digit workbook links redirect to the canonical protected path", async () => {
   const worker = await getWorker();
   const response = await worker.fetch(
@@ -246,7 +257,7 @@ test("public access, SEO, restored brand and sitemap are explicit", async () => 
   assert.match(chrome, /Footer sitemap/);
   for (const href of ["/episodes", "/journey", "/parents", "/educators", "/join", "/terms", "/sitemap.xml"]) assert.ok(chrome.includes(`href="${href}`));
   assert.match(layout, /EducationalOrganization/);
-  assert.match(layout, /og-public-v2[.]png/);
+  assert.match(layout, /og-ebooks-v1[.]png/);
   assert.match(sitemap, /episodes[.]filter[\s\S]+[.]map/);
   assert.match(robots, /disallow/);
   assert.match(manifest, /Word Weather/);
@@ -254,7 +265,7 @@ test("public access, SEO, restored brand and sitemap are explicit", async () => 
   assert.match(login, /verifyPasswordRecord/);
   assert.doesNotMatch(login, /password\s*===\s*["'][^"']+["']/);
   assert.match(workflow, /api\/email\/dispatch/);
-  await access(new URL("../public/og-public-v2.png", import.meta.url));
+  await access(new URL("../public/og-ebooks-v1.png", import.meta.url));
 });
 
 test("story imagery is responsive and all illustrated scenes are present", async () => {
@@ -279,4 +290,62 @@ test("story imagery is responsive and all illustrated scenes are present", async
   ]) {
     await access(new URL(`../public/stories/${name}`, import.meta.url));
   }
+});
+
+test("six illustrated Story eBooks have tablet readers, adult notes and publishing files", async () => {
+  const [source, libraryPage, reader, storyPage, chrome, sitemap] = await Promise.all([
+    readFile(new URL("../data/ebooks.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ebooks/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/EbookReader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/episodes/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteChrome.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/sitemap.ts", import.meta.url), "utf8"),
+  ]);
+  assert.equal((source.match(/id: "WHW-EB-/g) ?? []).length, 6);
+  assert.equal((source.match(/kind: "adult-notes"/g) ?? []).length, 6);
+  assert.equal((source.match(/pageNumber: 12/g) ?? []).length, 6);
+  assert.match(libraryPage, /Two stories at every depth/);
+  assert.match(libraryPage, /Built for iPad and shared reading/);
+  assert.match(reader, /ArrowLeft/);
+  assert.match(reader, /ArrowRight/);
+  assert.match(reader, /final page contains the adult learning notes/i);
+  assert.match(storyPage, /Seven characters[.] Many kinds of weather/);
+  assert.match(storyPage, /Arthur/);
+  assert.match(chrome, /href="\/ebooks"/);
+  assert.match(sitemap, /ebooks[.]map/);
+
+  const slugs = Array.from(source.matchAll(/slug: "([a-z0-9-]+)"/g), (match) => match[1]);
+  assert.equal(slugs.length, 6);
+  for (const slug of slugs) {
+    for (let scene = 1; scene <= 6; scene += 1) await access(new URL(`../public/ebooks/art/${slug}/scene-${String(scene).padStart(2, "0")}.jpg`, import.meta.url));
+    const pdf = await readFile(new URL(`../protected-resources/ebook-downloads/${slug}-education-edition.pdf`, import.meta.url));
+    const epub = await readFile(new URL(`../protected-resources/ebook-downloads/${slug}.epub`, import.meta.url));
+    assert.match(pdf.subarray(0, 5).toString(), /^%PDF/);
+    assert.ok(pdf.length > 500_000);
+    assert.ok(epub.length > 500_000);
+    await access(new URL(`../publishing/amazon/${slug}/${slug}-cover.jpg`, import.meta.url));
+    await access(new URL(`../publishing/amazon/${slug}/${slug}.epub`, import.meta.url));
+    const publishingMetadata = JSON.parse(await readFile(new URL(`../publishing/amazon/${slug}/metadata.json`, import.meta.url), "utf8"));
+    assert.equal(publishingMetadata.contentDisclosure.aiGeneratedText, true);
+    assert.equal(publishingMetadata.contentDisclosure.aiGeneratedImages, true);
+    assert.match(publishingMetadata.kdpSelect, /Do not enrol/);
+  }
+});
+
+test("the top notification is durable, dismissible and owner-editable", async () => {
+  const [chrome, notice, noticeAdmin, api, schema, migration] = await Promise.all([
+    readFile(new URL("../app/components/SiteChrome.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteNotice.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteNoticeAdmin.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/notice/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0002_burly_quasimodo.sql", import.meta.url), "utf8"),
+  ]);
+  assert.match(chrome, /getSiteNotice/);
+  assert.match(notice, /sessionStorage/);
+  assert.match(noticeAdmin, /Save notification/);
+  assert.match(api, /isAdmin/);
+  assert.match(api, /safe relative or HTTPS link/);
+  assert.match(schema, /siteNotices/);
+  assert.match(migration, /Six illustrated Story eBooks are ready for shared reading/);
 });

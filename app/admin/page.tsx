@@ -5,6 +5,7 @@ import { isAdmin } from "../admin-access";
 import { AdminConsole } from "../components/AdminConsole";
 import { EmailEngagementPanel } from "../components/EmailEngagementPanel";
 import { SiteFooter, SiteHeader } from "../components/SiteChrome";
+import { SiteNoticeAdmin } from "../components/SiteNoticeAdmin";
 import { loadEpisodeOverrides } from "@/db/episode-state";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export default function AdminPage() {
         <article><span>02</span><div><strong>Human review gate</strong><p>Education, safeguarding, accessibility and claims review remain visible work—not an automatic publishing status.</p></div></article>
         <article><span>03</span><div><strong>Release control</strong><p>Set the date and status here. Removed items leave the public library but remain recoverable in the project.</p></div></article>
       </section>
-      <section className="admin-shell"><AdminBody /><EmailEngagementPanel /></section>
+      <section className="admin-shell"><SiteNoticeAdmin /><AdminBody /><EmailEngagementPanel /></section>
       <SiteFooter />
     </main>
   );
